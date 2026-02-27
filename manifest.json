@@ -1,0 +1,16 @@
+{
+  "name": "Piedras Vivas Cúcuta",
+  "short_name": "Piedras Vivas",
+  "description": "App oficial para notas de prédicas",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#050b1a",
+  "theme_color": "#2980b9",
+  "icons": [
+    {
+      "src": "https://i.ibb.co/LzNfDq8/lion-profile-roar.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Piedras Vivas Cúcuta - App Oficial</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2980b9">
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
+</script>
+    <style>
+        /* CONFIGURACIÓN DE FONDO PERSONALIZADO */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', sans-serif;
+            
+            /* CAPA 1: Degradado de seguridad */
+            background: #134e5e; 
+            
+            /* CAPA 2: Tu imagen personalizada */
+            background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), 
+                              url('https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1920&q=80');
+            
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 { 
+            color: #ffffff; 
+            font-size: 2.8rem; 
+            margin-top: 40px;
+            margin-bottom: 0;
+            text-shadow: 2px 2px 15px rgba(0,0,0,0.9);
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .motto { 
+            color: #f0f0f0; 
+            font-weight: bold; 
+            margin-bottom: 40px; 
+            letter-spacing: 2px;
+            text-shadow: 1px 1px 8px rgba(0,0,0,0.7);
+            text-transform: uppercase;
+        }
+
+        /* DISEÑO DE LA TARJETA CON EFECTO CRISTAL */
+        .predica-card {
+            background: rgba(255, 255, 255, 0.12); 
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+        }
+
+        .section { margin-bottom: 20px; text-align: left; }
+        
+        label { 
+            display: block; 
+            color: #ffffff; 
+            font-size: 0.8rem; 
+            font-weight: bold; 
+            margin-bottom: 8px; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+            color: #1a252f;
+            box-sizing: border-box;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            background: #ffffff;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+
+        /* BOTONES */
+        .btn-plus {
+            position: fixed;
+            left: 30px;
+            bottom: 30px;
+            width: 70px;
+            height: 70px;
+            background: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 3rem;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(46, 204, 113, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+            z-index: 1000;
+        }
+
+        .btn-plus:hover { transform: scale(1.1) rotate(90deg); }
+
+        .btn-save {
+            position: fixed;
+            right: 30px;
+            bottom: 30px;
+            background: #1abc9c;
+            color: white;
+            border: none;
+            padding: 18px 30px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.3s;
+        }
+
+        .btn-save:hover { background: #16a085; transform: translateY(-3px); }
+
+        .delete-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(231, 76, 60, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .delete-btn:hover { background: #c0392b; }
+
+        #container-predicas {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 120px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>PIEDRAS VIVAS</h1>
+    <div class="motto">Iglesia Cristiana - Cúcuta</div>
+
+    <div id="container-predicas"></div>
+
+    <button class="btn-plus" onclick="crearBloque()" title="Añadir Nueva Prédica">+</button>
+
+    <button class="btn-save" onclick="guardarTodo()">
+        <span>💾</span> Guardar Todo
+    </button>
+
+    <script>
+        const contenedor = document.getElementById('container-predicas');
+
+        function crearBloque(datos = null) {
+            const div = document.createElement('div');
+            div.className = 'predica-card';
+            div.innerHTML = `
+                <button class="delete-btn" onclick="if(confirm('¿Eliminar este bloque?')) this.parentElement.remove()">✕</button>
+                <div class="section">
+                    <label>📖 CITA:</label>
+                    <input type="text" class="input-cita" value="${datos ? datos.cita : ''}" placeholder="Ej: Juan 3:16, Salmos 23...">
+                </div>
+                <div class="section">
+                    <label>💬 MENSAJE:</label>
+                    <input type="text" class="input-msg" value="${datos ? datos.msg : ''}" placeholder="Tema de la enseñanza...">
+                </div>
+                <div class="section">
+                    <label>📝 MIS NOTAS:</label>
+                    <textarea class="input-notas" rows="5" placeholder="Lo que Dios habló a tu corazón...">${datos ? datos.notas : ''}</textarea>
+                </div>
+            `;
+            contenedor.appendChild(div);
+            if (!datos) window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        window.onload = () => {
+            const saved = JSON.parse(localStorage.getItem('pv_nature_final') || '[]');
+            if (saved.length === 0) crearBloque();
+            else saved.forEach(b => crearBloque(b));
+        };
+
+        function guardarTodo() {
+            const bloques = document.querySelectorAll('.predica-card');
+            const data = [];
+            bloques.forEach(b => {<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Piedras Vivas Cúcuta - App Oficial</title>
+    <style>
+        /* CONFIGURACIÓN DE FONDO DE UNIVERSO */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: #050b1a; /* Azul noche profundo de seguridad */
+            background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), 
+                              url('https://images.unsplash.com/photo-1464802686167-b939a6910659?auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* IMAGEN DEL LEÓN EN LA ESQUINA INFERIOR DERECHA */
+        .lion-profile {
+            position: fixed;
+            right: -20px; /* Ajuste para que se vea mejor el perfil */
+            bottom: 0;
+            width: 450px; /* Tamaño prominente */
+            height: auto;
+            z-index: 5; /* Detrás de los botones, delante del fondo */
+            pointer-events: none; /* Para que no interfiera con los clics */
+            filter: drop-shadow(0 0 15px rgba(0,0,0,0.5));
+            opacity: 0.9;
+        }
+
+        h1 { 
+            color: #ffffff; 
+            font-size: 3rem; 
+            margin-top: 40px;
+            margin-bottom: 0;
+            text-shadow: 0 0 20px rgba(255,255,255,0.3), 2px 2px 10px rgba(0,0,0,0.8);
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .motto { 
+            color: #bdc3c7; 
+            font-weight: bold; 
+            margin-bottom: 40px; 
+            letter-spacing: 3px;
+            text-shadow: 1px 1px 5px rgba(0,0,0,0.8);
+            text-transform: uppercase;
+        }
+
+        /* TARJETAS CON EFECTO CRISTAL */
+        .predica-card {
+            background: rgba(255, 255, 255, 0.1); 
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+
+        .section { margin-bottom: 20px; }
+        
+        label { 
+            display: block; 
+            color: #5dade2; /* Azul claro para resaltar en el universo */
+            font-size: 0.85rem; 
+            font-weight: bold; 
+            margin-bottom: 8px; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            font-size: 1rem;
+            color: #ffffff;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        /* BOTONES */
+        .btn-plus {
+            position: fixed;
+            left: 30px;
+            bottom: 30px;
+            width: 70px;
+            height: 70px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 3rem;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-save {
+            position: fixed;
+            right: 30px;
+            bottom: 30px;
+            background: #2980b9;
+            color: white;
+            border: none;
+            padding: 18px 30px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(231, 76, 60, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+        }
+
+        #container-predicas {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 120px;
+        }
+    </style>
+</head>
+<body>
+
+    <img src="https://i.ibb.co/LzNfDq8/lion-profile-roar.png" alt="León de Judá" class="lion-profile">
+
+    <h1>PIEDRAS VIVAS</h1>
+    <div class="motto">Iglesia Cristiana - Cúcuta</div>
+
+    <div id="container-predicas"></div>
+
+    <button class="btn-plus" onclick="crearBloque()">+</button>
+
+    <button class="btn-save" onclick="guardarTodo()">
+        💾 Guardar Todo
+    </button>
+
+    <script>
+        const contenedor = document.getElementById('container-predicas');
+
+        function crearBloque(datos = null) {
+            const div = document.createElement('div');
+            div.className = 'predica-card';
+            div.innerHTML = `
+                <button class="delete-btn" onclick="if(confirm('¿Eliminar?')) this.parentElement.remove()">✕</button>
+                <div class="section">
+                    <label>📖 CITA BÍBLICA:</label>
+                    <input type="text" class="input-cita" value="${datos ? datos.cita : ''}" placeholder="Libro y Versículo...">
+                </div>
+                <div class="section">
+                    <label>💬 TEMA / MENSAJE:</label>
+                    <input type="text" class="input-msg" value="${datos ? datos.msg : ''}" placeholder="Nombre de la prédica...">
+                </div>
+                <div class="section">
+                    <label>📝 NOTAS PERSONALES:</label>
+                    <textarea class="input-notas" rows="6" placeholder="Escribe lo que aprendiste...">${datos ? datos.notas : ''}</textarea>
+                </div>
+            `;
+            contenedor.appendChild(div);
+        }
+
+        window.onload = () => {
+            const saved = JSON.parse(localStorage.getItem('pv_galaxy_data') || '[]');
+            if (saved.length === 0) crearBloque();
+            else saved.forEach(b => crearBloque(b));
+        };
+
+        function guardarTodo() {
+            const bloques = document.querySelectorAll('.predica-card');
+            const data = [];
+            bloques.forEach(b => {
+                data.push({
+                    cita: b.querySelector('.input-cita').value,
+                    msg: b.querySelector('.input-msg').value,
+                    notas: b.querySelector('.input-notas').value
+                });
+            });
+            localStorage.setItem('pv_galaxy_data', JSON.stringify(data));
+            alert("¡Mensaje guardado con éxito! 🦁✨");
+        }
+    </script>
+</body>
+</html>
+                data.push({
+                    cita: b.querySelector('.input-cita').value,
+                    msg: b.querySelector('.input-msg').value,
+                    notas: b.querySelector('.input-notas').value
+                });
+            });
+            localStorage.setItem('pv_nature_final', JSON.stringify(data));
+            alert("¡Notas de Piedras Vivas guardadas! ✨");
+        }
+    </script>
+</body>
+</html>
